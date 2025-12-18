@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crown & Cross — Dashboard</title>
+
+  <!-- Supabase v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: #f4f6f8;
+    }
+
+    /* LOGIN */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-box {
+      background: white;
+      padding: 32px;
+      border-radius: 12px;
+      width: 320px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+
+    .login-box h2 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #7c3aed;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* DASHBOARD */
+    #dashboard {
+      display: none;
+      padding: 24px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logout {
+      background: none;
+      border: 1px solid #ddd;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .card {
+      background: white;
+      padding: 16px;
+      border-radius: 10px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h2>Dashboard Login</h2>
+    <input id="email" type="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="login-btn">Log in</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="top">
+    <h1>Crown & Cross Dashboard</h1>
+    <button class="logout" id="logout-btn">Log out</button>
+  </div>
+
+  <div class="card">
+    ✅ Logged in successfully
+  </div>
+
+  <div class="card">
+    You can now paste your full dashboard UI here safely.
+  </div>
+</div>
+
+<script>
+  // 🔑 SUPABASE CONFIG (ALREADY FILLED)
+  const supabase = window.supabase.createClient(
+    "https://klgzrpkzhgdwahotondq.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsZ3pycGt6aGdkd2Fob3RvbmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5OTQ1MjQsImV4cCI6MjA4MTU3MDUyNH0.c6WHL8CXHl3EGAbLkCY7Bq7cAIvrWfw70vV-48xTDs8"
+  );
+
+  const loginScreen = document.getElementById("login-screen");
+  const dashboard = document.getElementById("dashboard");
+
+  function showDashboard() {
+    loginScreen.style.display = "none";
+    dashboard.style.display = "block";
+  }
+
+  function showLogin() {
+    loginScreen.style.display = "flex";
+    dashboard.style.display = "none";
+  }
+
+  // LOGIN
+  document.getElementById("login-btn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    // 🔥 FORCE UI UPDATE
+    if (data.session) {
+      showDashboard();
+    }
+  });
+
+  // LOGOUT
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    showLogin();
+  });
+
+  // 🔥 AUTH LISTENER (CRITICAL)
+  supabase.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      showDashboard();
+    } else {
+      showLogin();
+    }
+  });
+
+  // INITIAL CHECK (PAGE REFRESH FIX)
+  (async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      showDashboard();
+    } else {
+      showLogin();
+    }
+  })();
+</script>
+
+</body>
+</html>
+
