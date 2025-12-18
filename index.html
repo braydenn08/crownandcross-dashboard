@@ -4,180 +4,575 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Crown & Cross — Dashboard</title>
-
-  <!-- Supabase v2 -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: #f4f6f8;
+    :root{
+      --bg-grad: linear-gradient(135deg,#f8fafc 0%, #eef2f7 40%, #fffaf0 100%);
+      --card: #ffffff;
+      --muted: #6b7280;
+      --accent-1: #b8860b; /* gold-ish */
+      --accent-2: #7c3aed; /* purple accent */
+      --glass: rgba(15,23,42,0.02);
+      --radius: 12px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color-scheme: light;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      background: var(--bg-grad);
+      color:#0f172a;
+      -webkit-font-smoothing:antialiased;
+      padding:20px;
+      font-size:14px;
     }
 
-    /* LOGIN */
-    #login-screen {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* layout */
+    .app{
+      max-width:1200px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:240px 1fr;
+      gap:20px;
+      min-height:80vh;
     }
 
-    .login-box {
-      background: white;
-      padding: 32px;
-      border-radius: 12px;
-      width: 320px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    /* Sidebar */
+    .sidebar{
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,250,0.85));
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow: 0 6px 20px rgba(16,24,40,0.06);
+      display:flex;
+      flex-direction:column;
+      gap:14px;
     }
-
-    .login-box h2 {
-      margin-top: 0;
-      margin-bottom: 16px;
-      text-align: center;
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{
+      width:56px;height:56px;border-radius:10px;
+      background:linear-gradient(180deg,var(--accent-1),#ffd873);
+      display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;
+      box-shadow: 0 6px 18px rgba(124,58,237,0.12);
     }
+    .brand h1{margin:0;font-size:16px}
+    .brand p{margin:0;color:var(--muted);font-size:12px}
 
-    .login-box input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 12px;
-      border-radius: 8px;
-      border: 1px solid #ddd;
+    .nav{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+    .nav button{
+      background:transparent;border:0;padding:10px 12px;border-radius:9px;text-align:left;cursor:pointer;color:var(--muted);font-weight:700;
+      transition:all .14s;
     }
+    .nav button:hover{background:rgba(124,58,237,0.04);color:#0b1220}
+    .nav button.active{background:linear-gradient(90deg, rgba(124,58,237,0.08), rgba(184,134,11,0.06));color:#071229}
 
-    .login-box button {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      background: #7c3aed;
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
+    .sidebar .quick{margin-top:auto}
+    .row-actions{display:flex;gap:8px}
+
+    /* Main */
+    .main{
+      display:flex;flex-direction:column;gap:18px;
     }
-
-    /* DASHBOARD */
-    #dashboard {
-      display: none;
-      padding: 24px;
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
     }
+    .topbar-left h2{margin:0}
+    .topbar-left p{margin:0;color:var(--muted);font-size:13px}
 
-    .top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .kpi-wrap{display:flex;gap:12px;align-items:center}
+    .kpi{
+      background:var(--card);padding:12px;border-radius:10px;min-width:180px;box-shadow:0 6px 20px rgba(17,24,39,0.06);
     }
+    .kpi .title{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .kpi .value{font-size:20px;font-weight:800}
 
-    .logout {
-      background: none;
-      border: 1px solid #ddd;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
+    .content{display:block}
+
+    .cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:6px}
+    .card{
+      background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(17,24,39,0.04);
     }
+    .card h3{margin:0 0 8px 0;font-size:15px}
+    .muted{color:var(--muted);font-size:13px}
 
-    .card {
-      background: white;
-      padding: 16px;
-      border-radius: 10px;
-      margin-top: 16px;
+    table{width:100%;border-collapse:collapse}
+    table th, table td{padding:10px;text-align:left;border-bottom:1px solid rgba(15,23,42,0.06);font-size:13px}
+    table th{color:var(--muted);font-weight:700}
+
+    .btn{border:0;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+    .btn.primary{background:linear-gradient(90deg,var(--accent-2),var(--accent-1));color:white;box-shadow:0 6px 18px rgba(124,58,237,0.12)}
+    .btn.ghost{background:transparent;border:1px solid rgba(15,23,42,0.06);color:#0f172a}
+
+    .input, textarea, select{background:rgba(15,23,42,0.03);border:1px solid rgba(15,23,42,0.04);padding:10px;border-radius:8px;color:#071229;width:100%}
+    input[type=number]{-moz-appearance:textfield}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.35);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+    .modal{background:var(--card);padding:18px;border-radius:12px;min-width:360px;max-width:720px;box-shadow:0 12px 40px rgba(2,6,23,0.12)}
+    .modal h3{margin:0 0 8px 0}
+
+    footer{text-align:center;color:var(--muted);margin-top:8px;padding:8px}
+
+    @media (max-width:980px){
+      .app{grid-template-columns:1fr; padding:12px}
+      .cards{grid-template-columns:1fr}
+      .kpi-wrap{flex-wrap:wrap}
     }
   </style>
 </head>
 <body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">C&C</div>
+        <div>
+          <h1>Crown & Cross</h1>
+          <p>Business dashboard</p>
+        </div>
+      </div>
 
-<!-- LOGIN -->
-<div id="login-screen">
-  <div class="login-box">
-    <h2>Dashboard Login</h2>
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password" />
-    <button id="login-btn">Log in</button>
+      <nav class="nav" aria-label="Main navigation">
+        <button id="nav-overview" class="active">Overview</button>
+        <button id="nav-goals">Goals</button>
+        <button id="nav-staff">Staff & Salaries</button>
+        <button id="nav-income">Income</button>
+      </nav>
+
+      <div class="quick">
+        <div class="muted">Quick actions</div>
+        <div class="row-actions" style="margin-top:10px">
+          <button id="add-staff-btn" class="btn primary">+ Add Staff</button>
+          <button id="add-income-btn" class="btn ghost">+ Add Income</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h2>Dashboard</h2>
+          <p class="muted">Manage goals, team, salaries and income — data saved locally</p>
+        </div>
+
+        <div class="kpi-wrap">
+          <div class="kpi"><div class="title">Total Income</div><div id="kpi-income" class="value">$0</div></div>
+          <div class="kpi"><div class="title">Total Salaries</div><div id="kpi-salaries" class="value">$0</div></div>
+          <div class="kpi"><div class="title">Net</div><div id="kpi-net" class="value">$0</div></div>
+        </div>
+      </div>
+
+      <!-- Overview -->
+      <section id="section-overview" class="content">
+        <div class="cards" aria-hidden="false">
+          <div class="card">
+            <h3>Goals Progress</h3>
+            <div id="goals-list" class="muted">No goals yet — go to Goals to add one.</div>
+          </div>
+
+          <div class="card">
+            <h3>Team Snapshot</h3>
+            <div id="staff-count" style="font-weight:800">0 people</div>
+            <div class="muted" style="margin-top:8px">Open Staff to view or edit members</div>
+          </div>
+
+          <div class="card">
+            <h3>Recent Income</h3>
+            <div id="recent-income" class="muted">No income recorded</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Goals -->
+      <section id="section-goals" class="content" style="display:none">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3>Goals</h3>
+            <div>
+              <button id="add-goal-btn" class="btn primary">+ Add Goal</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <table id="goals-table" aria-label="Goals table">
+              <thead><tr><th>Title</th><th>Target</th><th>Progress</th><th style="text-align:right">Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Staff -->
+      <section id="section-staff" class="content" style="display:none">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3>Staff & Salaries</h3>
+            <div>
+              <button id="export-staff" class="btn ghost">Export CSV</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <table id="staff-table" aria-label="Staff table">
+              <thead><tr><th>Name</th><th>Role</th><th>Salary</th><th style="text-align:right">Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Income -->
+      <section id="section-income" class="content" style="display:none">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3>Income</h3>
+            <div>
+              <button id="export-income" class="btn ghost">Export CSV</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <table id="income-table" aria-label="Income table">
+              <thead><tr><th>Date</th><th>Source</th><th>Amount</th><th style="text-align:right">Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <footer>Made for Crown & Cross — local file. Keep it safe on your device.</footer>
+    </main>
   </div>
-</div>
 
-<!-- DASHBOARD -->
-<div id="dashboard">
-  <div class="top">
-    <h1>Crown & Cross Dashboard</h1>
-    <button class="logout" id="logout-btn">Log out</button>
+  <!-- Modal -->
+  <div id="modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div id="modal-content"></div>
+    </div>
   </div>
 
-  <div class="card">
-    ✅ Logged in successfully
-  </div>
+  <script>
+    // Short helpers
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
 
-  <div class="card">
-    You can now paste your full dashboard UI here safely.
-  </div>
-</div>
+    // storage keys
+    const KEY_GOALS = 'cc_goals_light_v1';
+    const KEY_STAFF = 'cc_staff_light_v1';
+    const KEY_INCOME = 'cc_income_light_v1';
 
-<script>
-  // 🔑 SUPABASE CONFIG (ALREADY FILLED)
-  const supabase = window.supabase.createClient(
-    "https://klgzrpkzhgdwahotondq.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsZ3pycGt6aGdkd2Fob3RvbmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5OTQ1MjQsImV4cCI6MjA4MTU3MDUyNH0.c6WHL8CXHl3EGAbLkCY7Bq7cAIvrWfw70vV-48xTDs8"
-  );
+    // load
+    let goals = JSON.parse(localStorage.getItem(KEY_GOALS) || '[]');
+    let staff = JSON.parse(localStorage.getItem(KEY_STAFF) || '[]');
+    let incomes = JSON.parse(localStorage.getItem(KEY_INCOME) || '[]');
 
-  const loginScreen = document.getElementById("login-screen");
-  const dashboard = document.getElementById("dashboard");
+    // nav mapping
+    const sections = {
+      'nav-overview': 'section-overview',
+      'nav-goals': 'section-goals',
+      'nav-staff': 'section-staff',
+      'nav-income': 'section-income'
+    };
 
-  function showDashboard() {
-    loginScreen.style.display = "none";
-    dashboard.style.display = "block";
-  }
-
-  function showLogin() {
-    loginScreen.style.display = "flex";
-    dashboard.style.display = "none";
-  }
-
-  // LOGIN
-  document.getElementById("login-btn").addEventListener("click", async () => {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
+    Object.keys(sections).forEach(id => {
+      $('#' + id).addEventListener('click', ()=> setActive(id));
     });
 
-    if (error) {
-      alert(error.message);
-      return;
+    function setActive(navId){
+      $$('.nav button').forEach(b => b.classList.remove('active'));
+      $('#' + navId).classList.add('active');
+      Object.values(sections).forEach(s => $('#' + s).style.display = 'none');
+      $('#' + sections[navId]).style.display = 'block';
+      renderAll();
     }
 
-    // 🔥 FORCE UI UPDATE
-    if (data.session) {
-      showDashboard();
+    // modal
+    function openModal(html){
+      $('#modal-content').innerHTML = html;
+      $('#modal').style.display = 'flex';
+      $('#modal').setAttribute('aria-hidden','false');
     }
-  });
-
-  // LOGOUT
-  document.getElementById("logout-btn").addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    showLogin();
-  });
-
-  // 🔥 AUTH LISTENER (CRITICAL)
-  supabase.auth.onAuthStateChange((_event, session) => {
-    if (session) {
-      showDashboard();
-    } else {
-      showLogin();
+    function closeModal(){
+      $('#modal').style.display = 'none';
+      $('#modal').setAttribute('aria-hidden','true');
+      $('#modal-content').innerHTML = '';
     }
-  });
+    // close clicking outside
+    $('#modal').addEventListener('click', (e) => {
+      if (e.target === $('#modal')) closeModal();
+    });
 
-  // INITIAL CHECK (PAGE REFRESH FIX)
-  (async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      showDashboard();
-    } else {
-      showLogin();
+    // render functions
+    function formatMoney(n){ return '$' + Number(n || 0).toLocaleString(); }
+
+    function renderKPIs(){
+      const totalIncome = incomes.reduce((s,i)=> s + Number(i.amount || 0), 0);
+      const totalSalaries = staff.reduce((s,i)=> s + Number(i.salary || 0), 0);
+      $('#kpi-income').textContent = formatMoney(totalIncome);
+      $('#kpi-salaries').textContent = formatMoney(totalSalaries);
+      $('#kpi-net').textContent = formatMoney(totalIncome - totalSalaries);
     }
-  })();
-</script>
+
+    function renderOverview(){
+      $('#goals-list').innerHTML = goals.length ? 
+        goals.map(g => {
+          const pct = g.target ? Math.min(100, Math.round((g.progress / g.target) * 100)) : 0;
+          return `<div style="margin-bottom:12px">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <strong>${escapeHtml(g.title)}</strong>
+                      <span class="muted">${pct}%</span>
+                    </div>
+                    <div style="height:8px;background:rgba(15,23,42,0.04);border-radius:8px;margin-top:8px">
+                      <div style="width:${pct}%;height:8px;border-radius:8px;background:linear-gradient(90deg,var(--accent-2),var(--accent-1))"></div>
+                    </div>
+                  </div>`;}).join('') : '<div class="muted">No goals yet — add one in Goals.</div>';
+
+      $('#staff-count').textContent = staff.length + (staff.length === 1 ? ' person' : ' people');
+
+      const rec = incomes.slice().sort((a,b)=> new Date(b.date) - new Date(a.date)).slice(0,4);
+      $('#recent-income').innerHTML = rec.length ? rec.map(r => `<div>${escapeHtml(r.date)} — ${escapeHtml(r.source)} — ${formatMoney(r.amount)}</div>`).join('') : '<div class="muted">No income recorded</div>';
+    }
+
+    function renderGoals(){
+      const tbody = $('#goals-table tbody');
+      tbody.innerHTML = '';
+      goals.forEach((g, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(g.title)}</td><td>${formatMoney(g.target)}</td><td>${formatMoney(g.progress)} / ${formatMoney(g.target)}</td>
+                        <td style="text-align:right">
+                          <button data-idx="${idx}" class="btn ghost edit-goal">Edit</button>
+                          <button data-idx="${idx}" class="btn ghost del-goal">Delete</button>
+                        </td>`;
+        tbody.appendChild(tr);
+      });
+      $$('.edit-goal').forEach(b => b.addEventListener('click', e => openEditGoal(e.target.dataset.idx)));
+      $$('.del-goal').forEach(b => b.addEventListener('click', e => {
+        if (confirm('Delete this goal?')) {
+          goals.splice(e.target.dataset.idx, 1);
+          saveAndRender();
+        }
+      }));
+    }
+
+    function renderStaff(){
+      const tbody = $('#staff-table tbody');
+      tbody.innerHTML = '';
+      staff.forEach((s, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.role)}</td><td>${formatMoney(s.salary)}</td>
+                        <td style="text-align:right">
+                          <button data-idx="${idx}" class="btn ghost edit-staff">Edit</button>
+                          <button data-idx="${idx}" class="btn ghost del-staff">Delete</button>
+                        </td>`;
+        tbody.appendChild(tr);
+      });
+      $$('.edit-staff').forEach(b => b.addEventListener('click', e => openEditStaff(e.target.dataset.idx)));
+      $$('.del-staff').forEach(b => b.addEventListener('click', e => {
+        if (confirm('Delete this staff member?')) {
+          staff.splice(e.target.dataset.idx, 1);
+          saveAndRender();
+        }
+      }));
+    }
+
+    function renderIncome(){
+      const tbody = $('#income-table tbody');
+      tbody.innerHTML = '';
+      incomes.slice().sort((a,b)=> new Date(b.date) - new Date(a.date)).forEach((inc, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(inc.date)}</td><td>${escapeHtml(inc.source)}</td><td>${formatMoney(inc.amount)}</td>
+                        <td style="text-align:right">
+                          <button data-idx="${idx}" class="btn ghost edit-income">Edit</button>
+                          <button data-idx="${idx}" class="btn ghost del-income">Delete</button>
+                        </td>`;
+        tbody.appendChild(tr);
+      });
+      $$('.edit-income').forEach(b => b.addEventListener('click', e => openEditIncome(e.target.dataset.idx)));
+      $$('.del-income').forEach(b => b.addEventListener('click', e => {
+        if (confirm('Delete this income record?')) {
+          incomes.splice(e.target.dataset.idx, 1);
+          saveAndRender();
+        }
+      }));
+    }
+
+    function renderAll(){
+      renderKPIs();
+      renderOverview();
+      renderGoals();
+      renderStaff();
+      renderIncome();
+    }
+
+    // escape helper
+    function escapeHtml(text) {
+      return text.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    function saveAndRender(){
+      localStorage.setItem(KEY_GOALS, JSON.stringify(goals));
+      localStorage.setItem(KEY_STAFF, JSON.stringify(staff));
+      localStorage.setItem(KEY_INCOME, JSON.stringify(incomes));
+      renderAll();
+    }
+
+    // Modals for add/edit
+    function openAddGoal(){
+      openModal(`
+        <h3>Add Goal</h3>
+        <input id="goal-title" placeholder="Title" /><br/><br/>
+        <input id="goal-target" type="number" placeholder="Target amount" /><br/><br/>
+        <input id="goal-progress" type="number" placeholder="Progress" /><br/><br/>
+        <button class="btn primary" id="save-goal">Save</button>
+        <button class="btn ghost" id="cancel-goal">Cancel</button>
+      `);
+      $('#save-goal').addEventListener('click', ()=>{
+        const t = $('#goal-title').value.trim();
+        const target = Number($('#goal-target').value) || 0;
+        const progress = Number($('#goal-progress').value) || 0;
+        if(!t){alert('Title required');return;}
+        goals.push({title:t,target,progress});
+        saveAndRender();closeModal();
+      });
+      $('#cancel-goal').addEventListener('click',closeModal);
+    }
+
+    function openEditGoal(idx){
+      const g = goals[idx];
+      openModal(`
+        <h3>Edit Goal</h3>
+        <input id="goal-title" placeholder="Title" value="${escapeHtml(g.title)}" /><br/><br/>
+        <input id="goal-target" type="number" placeholder="Target amount" value="${g.target}" /><br/><br/>
+        <input id="goal-progress" type="number" placeholder="Progress" value="${g.progress}" /><br/><br/>
+        <button class="btn primary" id="save-goal">Save</button>
+        <button class="btn ghost" id="cancel-goal">Cancel</button>
+      `);
+      $('#save-goal').addEventListener('click', ()=>{
+        const t = $('#goal-title').value.trim();
+        const target = Number($('#goal-target').value) || 0;
+        const progress = Number($('#goal-progress').value) || 0;
+        if(!t){alert('Title required');return;}
+        goals[idx] = {title:t,target,progress};
+        saveAndRender();closeModal();
+      });
+      $('#cancel-goal').addEventListener('click',closeModal);
+    }
+
+    function openAddStaff(){
+      openModal(`
+        <h3>Add Staff</h3>
+        <input id="staff-name" placeholder="Name" /><br/><br/>
+        <input id="staff-role" placeholder="Role" /><br/><br/>
+        <input id="staff-salary" type="number" placeholder="Salary (0 allowed)" /><br/><br/>
+        <button class="btn primary" id="save-staff">Save</button>
+        <button class="btn ghost" id="cancel-staff">Cancel</button>
+      `);
+      $('#save-staff').addEventListener('click', ()=>{
+        const name = $('#staff-name').value.trim();
+        const role = $('#staff-role').value.trim();
+        const salary = Number($('#staff-salary').value);
+        if(!name){alert('Name required');return;}
+        if(isNaN(salary)) {alert('Salary must be a number'); return;}
+        staff.push({name,role,salary});
+        saveAndRender();closeModal();
+      });
+      $('#cancel-staff').addEventListener('click',closeModal);
+    }
+
+    function openEditStaff(idx){
+      const s = staff[idx];
+      openModal(`
+        <h3>Edit Staff</h3>
+        <input id="staff-name" placeholder="Name" value="${escapeHtml(s.name)}" /><br/><br/>
+        <input id="staff-role" placeholder="Role" value="${escapeHtml(s.role)}" /><br/><br/>
+        <input id="staff-salary" type="number" placeholder="Salary" value="${s.salary}" /><br/><br/>
+        <button class="btn primary" id="save-staff">Save</button>
+        <button class="btn ghost" id="cancel-staff">Cancel</button>
+      `);
+      $('#save-staff').addEventListener('click', ()=>{
+        const name = $('#staff-name').value.trim();
+        const role = $('#staff-role').value.trim();
+        const salary = Number($('#staff-salary').value);
+        if(!name){alert('Name required');return;}
+        if(isNaN(salary)) {alert('Salary must be a number'); return;}
+        staff[idx] = {name,role,salary};
+        saveAndRender();closeModal();
+      });
+      $('#cancel-staff').addEventListener('click',closeModal);
+    }
+
+    function openAddIncome(){
+      openModal(`
+        <h3>Add Income</h3>
+        <input id="income-date" type="date" value="${new Date().toISOString().split('T')[0]}" /><br/><br/>
+        <input id="income-source" placeholder="Source" /><br/><br/>
+        <input id="income-amount" type="number" placeholder="Amount" /><br/><br/>
+        <button class="btn primary" id="save-income">Save</button>
+        <button class="btn ghost" id="cancel-income">Cancel</button>
+      `);
+      $('#save-income').addEventListener('click', ()=>{
+        const date = $('#income-date').value;
+        const source = $('#income-source').value.trim();
+        const amount = Number($('#income-amount').value);
+        if(!date || !source){alert('Date and Source required');return;}
+        if(isNaN(amount)) {alert('Amount must be a number'); return;}
+        incomes.push({date,source,amount});
+        saveAndRender();closeModal();
+      });
+      $('#cancel-income').addEventListener('click',closeModal);
+    }
+
+    function openEditIncome(idx){
+      const i = incomes[idx];
+      openModal(`
+        <h3>Edit Income</h3>
+        <input id="income-date" type="date" value="${i.date}" /><br/><br/>
+        <input id="income-source" placeholder="Source" value="${escapeHtml(i.source)}" /><br/><br/>
+        <input id="income-amount" type="number" placeholder="Amount" value="${i.amount}" /><br/><br/>
+        <button class="btn primary" id="save-income">Save</button>
+        <button class="btn ghost" id="cancel-income">Cancel</button>
+      `);
+      $('#save-income').addEventListener('click', ()=>{
+        const date = $('#income-date').value;
+        const source = $('#income-source').value.trim();
+        const amount = Number($('#income-amount').value);
+        if(!date || !source){alert('Date and Source required');return;}
+        if(isNaN(amount)) {alert('Amount must be a number'); return;}
+        incomes[idx] = {date,source,amount};
+        saveAndRender();closeModal();
+      });
+      $('#cancel-income').addEventListener('click',closeModal);
+    }
+
+    // Add buttons
+    $('#add-goal-btn').addEventListener('click',openAddGoal);
+    $('#add-staff-btn').addEventListener('click',openAddStaff);
+    $('#add-income-btn').addEventListener('click',openAddIncome);
+
+    // CSV Export (simple)
+    function downloadCSV(filename, rows){
+      const csv = rows.map(r => Object.values(r).map(v => `"${v}"`).join(',')).join('\n');
+      const blob = new Blob([csv],{type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    $('#export-staff').addEventListener('click',()=>downloadCSV('staff.csv',staff));
+    $('#export-income').addEventListener('click',()=>downloadCSV('income.csv',incomes));
+
+    // auto save backup on refresh/close
+    function autoBackup(){
+      const data = {
+        goals, staff, incomes
+      };
+      const blob = new Blob([JSON.stringify(data,null,2)],{type:'text/plain'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'crown_cross_backup.txt';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    window.addEventListener('beforeunload', autoBackup);
+
+    renderAll();
+  </script>
 
 </body>
 </html>
